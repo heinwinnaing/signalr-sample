@@ -1,0 +1,34 @@
+﻿@page
+@model SignalRApp.Pages.IndexModel
+@{
+    Layout = null;
+}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Realtime messaging</title>
+    <link rel="icon" href="~/favicon.ico" />
+    <link href="~/css/login.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900|Material+Icons" rel="stylesheet" />
+</head>
+<body>
+
+    <div class="container">
+        <div class="info">
+            <h1>Login</h1>
+        </div>
+    </div>
+    <div class="form">
+        <div class="thumbnail"><img src="https://dt-cdn.net/hub/logos/azure-signalr.png" /></div>
+        
+        <form class="login-form" method="post">
+            @Html.AntiForgeryToken()
+            <input name="name" type="text" placeholder="name" />
+            <input name="email" type="email" placeholder="email" />
+            <button>Join Group</button>
+        </form>
+    </div>
+</body>
+</html>

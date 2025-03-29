@@ -1,0 +1,149 @@
+﻿@page
+@model SignalRApp.Pages.MessageModel
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="~/favicon.ico" />
+    <title>Realtime messaging</title>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" />
+</head>
+<body>
+    <!-- char-area -->
+    <div class="container py-5 px-4">
+        <!-- Start -->
+        <header class="text-center">
+            <h1 class="display-4 text-white">@User?.Identity?.Name</h1>
+        </header>
+
+        <div class="row rounded-lg overflow-hidden shadow">
+            <!-- Chat Box-->
+            <div class="col-12 px-0">
+                <div class="bg-gray px-4 py-2 bg-light">
+                    <p class="h5 mb-0 py-1">Chatting group</p>
+                </div>
+                <div name="messages" class="px-4 py-5 chat-box bg-white"></div>
+
+                <!-- Typing area -->
+                <section class="bg-light">
+                    <div class="input-group">
+                        <input name="txt-message" type="text" placeholder="Type a message" aria-describedby="button-addon2" class="form-control rounded-0 border-0 py-4 bg-light">
+                        <div class="input-group-append">
+                            <button id="btn-send-message" type="button" class="btn btn-link"> <i class="fa fa-paper-plane"></i></button>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+        </div>
+    </div>
+    <!-- char-area -->
+
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.30.1/moment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/5.0.11/signalr.min.js"></script>
+    <script>
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/hub/message")
+            .withAutomaticReconnect()
+            .build();
+        connection.start()
+            .then(() => {})
+            .catch((err) => {});
+            
+        connection.onreconnecting(error => {
+            //console.assert(connection.state === signalR.HubConnectionState.Reconnecting);
+            $('input[name="txt-message"]').attr('disabled', true);
+            $('button[id="btn-send-message"]').attr('disabled', true);
+            console.log(`Connection lost due to error "${error}". Reconnecting.`)
+        });
+
+        connection.onreconnected(connectionId => {
+            //console.assert(connection.state === signalR.HubConnectionState.Connected);
+            $('input[name="txt-message"]').attr('disabled', false);
+            $('button[id="btn-send-message"]').attr('disabled', false);
+            console.log(`Connection reestablished. Connected with connectionId "${connectionId}".`)
+        });
+
+        connection.on('ReceiveMessage', (msg) => {
+            $('div[name="messages"]').ReceiveMessage(msg);
+        });
+
+        $('button[id="btn-send-message"]').on('click', function(){
+            $msg = $('input[name="txt-message"]');
+            if($msg.val() === '' || $msg.val() === null)
+            {
+                return;
+            }
+            connection.invoke("SendMessage", { 
+                member: $('input[name="receiver-id"]').val(),
+                message: $msg.val() 
+            })
+            .catch(function (err) {
+                return console.error(err.toString());
+            });
+            $('div[name="messages"]').SendMessage({ message: $msg.val()});
+            $msg.val('')
+        });
+
+        $('input[name="txt-message"]').on('keypress', function (e) {
+            if(e.which == 13) {
+                $('button[id="btn-send-message"]').click();
+            }
+        });
+
+        $.fn.SendMessage = function(data){
+            $message = $('<div>', {
+                class: 'media w-50 ml-auto mb-3',
+                html: $('<div>', {
+                    class: 'media-body',
+                    html: $('<div>', {
+                        class: 'bg-primary rounded py-2 px-3 mb-2',
+                        html: $('<p>', { class: 'text-small mb-0 text-white', text: data.message })
+                    })
+                }).append($('<p>', { class: 'small text-muted', text: moment().format('LLL') }))
+            });
+            $(this).append($message)
+        }
+
+        $.fn.ReceiveMessage = function(message){
+            var createdAt = moment.utc(message.createdAt).local();
+            $img = $('<img>', {
+                width: 50,
+                class: 'rounded-circle',
+                src: message.sender.avator
+            });
+            $text = $('<div>', {
+                class: 'media-body ml-3',
+                html: $('<div>', {
+                    class: 'bg-light rounded py-2 px-3 mb-2',
+                    html: $('<p>', {class: 'text-small mb-0 text-muted', text: message.text})
+                })
+            })
+                .append($('<p>',{ class: 'small text-muted', text: message.sender.name + ' | ' + createdAt.format("LLL")}));
+            $message = $('<div>',{
+                class: 'media w-50 mb-3',
+                html: $img
+            })
+                .append($text);
+            $(this).append($message);
+        }
+
+        $.fn.uuidv4 = function(){
+            return "10000000-1000-4000-8000-100000000000".replace(/[018]/g, c =>
+              (+c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> +c / 4).toString(16)
+            );
+        }
+
+    </script>
+</body>
+</html>
