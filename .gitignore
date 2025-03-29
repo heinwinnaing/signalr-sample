@@ -5,3 +5,10 @@
 /SignalRApp/bin/Debug/net8.0
 /SignalRApp/obj
 *.sln
+.vs/DemoSignalR/DesignTimeBuild/.dtbcache.v2
+.vs/DemoSignalR/v17/.futdcache.v2
+.vs/DemoSignalR/v17/.suo
+.vs/DemoSignalR/v17/DocumentLayout.json
+.vs/ProjectEvaluation/demosignalr.metadata.v9.bin
+.vs/ProjectEvaluation/demosignalr.projects.v9.bin
+.vs/ProjectEvaluation/demosignalr.strings.v9.bin
